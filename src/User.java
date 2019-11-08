@@ -1,10 +1,12 @@
-public class User {
+import java.io.Serializable;
+
+public class User implements Serializable{
 
     private String username = null;
     private byte[] encryptedPassword = null;
     private byte[] salt = null;
 
-    public User(String name, String pass){
+    User(String name, String pass){
 
         AESGCM aes = new AESGCM();
 

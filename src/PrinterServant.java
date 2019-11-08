@@ -1,6 +1,7 @@
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+import java.io.*;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.security.InvalidKeyException;
@@ -13,35 +14,90 @@ import java.util.HashMap;
 import java.util.List;
 
 public class PrinterServant extends UnicastRemoteObject implements PrinterRemote{
-    public ArrayList<String> queue = new ArrayList<>() {{
+    private ArrayList<String> queue = new ArrayList<>() {{
         add("file1.docx");
         add("file2.docx");
         add("file3.docx");
     }};
-    public ArrayList<String> printers = new ArrayList<>() {{
+    private ArrayList<String> printers = new ArrayList<>() {{
         add("Printer1");
         add("Printer2");
         add("Printer3");
     }};
-    public String status = "";
-    public HashMap<String,String> settings = new HashMap<>();
+    private String status = "";
+    private HashMap<String,String> settings = new HashMap<>();
     private AESGCM aes = new AESGCM();
     private RSA rsa = new RSA();
+    private String filepath = "Resources/users.txt";
 
-    private static List<User> userList = new ArrayList<>() {{
+    private static List<User> tempUserList = new ArrayList<>() {{
         add(new User("Bob","bobbybob"));
         add(new User("Alice","password"));
         add(new User("York","qwerty"));
         add(new User("Zach","ytrewq"));
     }};
+    private static List<User> userList = new ArrayList<>();
 
     public PrinterServant() throws RemoteException, NoSuchAlgorithmException {
         super();
         rsa.generateKeys();
+        writeUsersToFile(tempUserList);
+        readUsersFromFile(filepath);
+    }
+
+    private void writeUsersToFile(List<User> users) {
+        try {
+            FileOutputStream fileOut = new FileOutputStream(filepath);
+            ObjectOutputStream objectOut = new ObjectOutputStream(fileOut);
+            for (Object o : users) {
+                try {
+                    objectOut.writeObject(o);
+                    System.out.println("saved");
+                } catch (NotSerializableException e) {
+                    System.out.println("An object was not serializable, it has not been saved.");
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            try {
+                objectOut.writeObject(null);
+                System.out.println("saved");
+            } catch (NotSerializableException e) {
+                System.out.println("An object was not serializable, it has not been saved.");
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            objectOut.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    private void readUsersFromFile(String filepath) {
+        try {
+            FileInputStream fileIn = new FileInputStream(filepath);
+            boolean cont = true;
+            try {
+                ObjectInputStream input = new ObjectInputStream(fileIn);
+                while (cont) {
+                    Object obj = input.readObject();
+                    if (obj != null)
+                        userList.add((User) obj);
+                    else
+                        cont = false;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     public String echo(String input) {
-
         return "From server:" + input;
     }
 
@@ -53,7 +109,7 @@ public class PrinterServant extends UnicastRemoteObject implements PrinterRemote
                         + (queue.indexOf(filename)+1);
             }
         }
-        return "Printer: " + printer + " not found";
+        return "Printer: " + printer + " not found.";
     }
 
     public String queue() {
@@ -131,9 +187,7 @@ public class PrinterServant extends UnicastRemoteObject implements PrinterRemote
     private boolean parseInteger(String s) {
         try {
             Integer.parseInt(s);
-        } catch(NumberFormatException e) {
-            return false;
-        } catch(NullPointerException e) {
+        } catch(NumberFormatException | NullPointerException e) {
             return false;
         }
         return true;
@@ -195,9 +249,7 @@ public class PrinterServant extends UnicastRemoteObject implements PrinterRemote
     public PublicKey getPublicKey() throws RemoteException {
         try {
             return rsa.getPublicKey();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (InvalidKeySpecException e) {
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
             e.printStackTrace();
         }
         return null;
