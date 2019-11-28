@@ -5,14 +5,16 @@ public class User implements Serializable{
     private String username = null;
     private byte[] encryptedPassword = null;
     private byte[] salt = null;
+    private String role = null;
 
-    User(String name, String pass){
+    User(String name, String pass, String userRole){
 
         AESGCM aes = new AESGCM();
 
         username = name;
         salt = aes.generateSalt();
         encryptedPassword = aes.encrypt(pass, salt);
+        role = userRole;
 
     }
 
@@ -27,4 +29,6 @@ public class User implements Serializable{
     public byte[] getSalt() {
         return salt;
     }
+
+    public String getRole() { return role; }
 }

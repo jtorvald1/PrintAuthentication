@@ -19,6 +19,7 @@ public class Client {
     private static int loginAttempts = 0;
     private static RSA rsa = new RSA();
     private static PublicKey pk;
+    private static String username;
 
     public static void main(String[] args) throws RemoteException, NotBoundException, MalformedURLException, InterruptedException, NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, NoSuchPaddingException, IllegalBlockSizeException, InvalidKeySpecException {
         remote = (PrinterRemote) Naming.lookup("rmi://localhost:5099/printer");
@@ -60,6 +61,7 @@ public class Client {
         encryptedPass = rsa.encrypt(password,pk);
 
         if (remote.authenticate(encryptedUser, encryptedPass)) {
+            username = user;
             System.out.println("You are now logged in to the print server.");
             return true;
         }
@@ -139,7 +141,7 @@ public class Client {
     }
 
     private static String submitChoice(String choice, String arg1, String arg2) throws RemoteException {
-        return remote.submitChoice(choice, arg1, arg2);
+        return remote.submitChoice(choice, arg1, arg2, username);
     }
 
 

@@ -32,7 +32,7 @@ public interface PrinterRemote extends Remote {
 
     boolean authenticate(byte[] user, byte[] password) throws RemoteException, InvalidKeySpecException, NoSuchAlgorithmException, IllegalBlockSizeException, InvalidKeyException, NoSuchPaddingException, BadPaddingException;
 
-    String submitChoice(String choice, String arg1, String arg2) throws RemoteException;
+    String submitChoice(String choice, String arg1, String arg2, String username) throws RemoteException;
 
     PublicKey getPublicKey() throws RemoteException;
 }
